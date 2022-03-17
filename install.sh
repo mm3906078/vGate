@@ -1,5 +1,7 @@
 #!/bin/bash
+apt update
 apt install -y python3-pip python3
+pip3 install pytz
 modprobe iptable_nat
 echo 1 > /proc/sys/net/ipv4/ip_forward
 touch /etc/systemd/system/vgate.service
@@ -16,3 +18,4 @@ StartLimitInterval=0
 [Install]
 WantedBy=multi-user.target
 EOF
+systemctl daemon-reload
