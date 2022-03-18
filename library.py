@@ -3,6 +3,8 @@
 import logging
 import os
 import subprocess
+import speedtest
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -73,6 +75,13 @@ def remove_gateway(gateway, name):
 def switch_gateway(gateways, gateway, name):
     remove_gateways(gateways)
     add_gateway(gateway, name)
+
+
+def speed_test():
+    s = speedtest.Speedtest()
+    s.get_best_server()
+    s.download()
+    return s.results.dict()
 
 
 def in_between(now, start, end):
