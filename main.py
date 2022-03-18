@@ -5,6 +5,7 @@ import subprocess
 import time as t
 from configparser import ConfigParser
 from datetime import *
+
 import pytz
 
 import library
@@ -29,6 +30,7 @@ class Gateway:
         self.available = _available
         self.start_time = _start_time
         self.end_time = _end_time
+        self.weight_conf = _gw_weight
 
     def print_available(self):
         logging.info("Gateway: {} Available: {}".format(self.name, self.available))
@@ -73,13 +75,25 @@ def available_status():
         globals()[i].status = "offline"
 
 
-def chose_gateway():
+def if_needed_change_weight_base_on_time():
     now = datetime.now(tz).time()
-    logging.info("Current time: {}".format(now))
     for i in section:
         if library.in_between(now, time(int(globals()[i].start_time)), time(int(globals()[i].end_time))):
-            logging.info("Gateway: {} wight is down".format(globals()[i].name))
-            globals()[i].weight -= 1
+            if globals()[i].weight == globals()[i].weight_conf:
+                logging.info("Gateway: {} wight is down".format(globals()[i].name))
+                globals()[i].weight -= 1
+                return 1
+        if not library.in_between(now, time(int(globals()[i].start_time)), time(int(globals()[i].end_time))):
+            if globals()[i].weight != globals()[i].weight_conf:
+                globals()[i].weight += 1
+                logging.info("Gateway: {} wight is up".format(globals()[i].name))
+                return 1
+
+    return 0
+
+
+def chose_gateway():
+    if_needed_change_weight_base_on_time()
     section.sort(key=lambda x: globals()[x].weight)
     available_status()
     for i in section:
@@ -124,9 +138,10 @@ def check_gateway():
 
 def always_available():
     while True:
-        t.sleep(20)
-        res = check_gateway()
-        if res == 1:
+        t.sleep(30)
+        res_time_check = if_needed_change_weight_base_on_time()
+        res_gateway_check = check_gateway()
+        if res_time_check == 1 or res_gateway_check == 1:
             switch_gateway()
 
 
