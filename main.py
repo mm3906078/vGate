@@ -1,7 +1,9 @@
 #!/usr/bin/python3
 # file  -- main.py --
 import logging
+import signal
 import subprocess
+import sys
 import time as t
 from configparser import ConfigParser
 from datetime import *
@@ -21,6 +23,8 @@ logging.basicConfig(
 
 
 class Gateway:
+    speed = {}
+
     def __init__(self, _gw_ip, _gw_name, _gw_weight=1, _start_time=None, _end_time=None,
                  _gw_status="offline", _available=False):
         self.ip = _gw_ip
@@ -36,7 +40,7 @@ class Gateway:
         logging.info("Gateway: {} Available: {}".format(self.name, self.available))
 
 
-def startapp():
+def load_config():
     logging.info("Dgate started")
     library.create_dir()
     logging.info("load config")
@@ -53,15 +57,15 @@ def startapp():
     tz = pytz.timezone(config['general']['timezone'])
     logging.info("timezone: {}".format(tz))
     logging.info("config loaded")
+
+
+def startapp():
+    load_config()
     switch_gateway()
 
 
 def available_status():
-    gateway_list = []
-    for i in section:
-        gateway_list.append(globals()[i].ip)
-        globals()[i].status = "offline"
-    library.remove_gateways(gateway_list)
+    remove_gateway()
     for i in section:
         library.add_gateway(globals()[i].ip, globals()[i].name)
         globals()[i].state = "online"
@@ -145,5 +149,51 @@ def always_available():
             switch_gateway()
 
 
-startapp()
-always_available()
+def terminate_process(signal_number, frame):
+    logging.info('(SIGTERM) terminating the process')
+    remove_gateway()
+    sys.exit()
+
+
+def read_configuration(signal_number, frame):
+    logging.info('(SIGHUP) reading configuration')
+    load_config()
+    return
+
+
+def remove_gateway():
+    gateway_list = []
+    for i in section:
+        gateway_list.append(globals()[i].ip)
+        globals()[i].status = "offline"
+    library.remove_gateways(gateway_list)
+
+
+def speed_test(signal_number, frame, factor='ping'):
+    logging.info("Gateways are testing ... ")
+    remove_gateway()
+    for i in section:
+        library.add_gateway(globals()[i].ip, globals()[i].name)
+        globals()[i].state = "online"
+        globals()[i].speed = library.speed_test()
+        logging.info(globals()[i].speed)
+        logging.info("Gateway: {} {} is {} ".format(globals()[i].name, factor, globals()[i].speed.get(factor)))
+        library.remove_gateway(globals()[i].ip, globals()[i].name)
+        globals()[i].status = "offline"
+
+    remove_gateway()
+    for i in section:
+        for j in section:
+            if globals()[i].speed.get(factor) < globals()[j].speed.get(factor):
+                globals()[i].weight_conf -= 1
+                globals()[i].weight -= 1
+                logging.info("Gateway: {} is better than {}".format(globals()[i].name, globals()[j].name))
+                break
+
+
+if __name__ == '__main__':
+    signal.signal(signal.SIGUSR1, speed_test)
+    signal.signal(signal.SIGHUP, read_configuration)
+    signal.signal(signal.SIGTERM, terminate_process)
+    startapp()
+    always_available()
