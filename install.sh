@@ -19,3 +19,4 @@ StartLimitInterval=0
 WantedBy=multi-user.target
 EOF
 systemctl daemon-reload
+(crontab -l 2>/dev/null; echo "0 0 * * 0 /usr/bin/rm -rf /opt/vGate/Dgate.log") | crontab -
