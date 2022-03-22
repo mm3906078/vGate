@@ -85,11 +85,11 @@ def if_needed_change_weight_base_on_time():
         if library.in_between(now, time(int(globals()[i].start_time)), time(int(globals()[i].end_time))):
             if globals()[i].weight == globals()[i].weight_conf:
                 logging.info("Gateway: {} wight is down".format(globals()[i].name))
-                globals()[i].weight -= 1
+                globals()[i].weight -= globals()['general'].time_weight
                 return 1
         if not library.in_between(now, time(int(globals()[i].start_time)), time(int(globals()[i].end_time))):
             if globals()[i].weight != globals()[i].weight_conf:
-                globals()[i].weight += 1
+                globals()[i].weight += globals()['general'].time_weight
                 logging.info("Gateway: {} wight is up".format(globals()[i].name))
                 return 1
 
@@ -185,8 +185,8 @@ def speed_test(signal_number, frame, factor='ping'):
     for i in section:
         for j in section:
             if globals()[i].speed.get(factor) < globals()[j].speed.get(factor):
-                globals()[i].weight_conf -= 1
-                globals()[i].weight -= 1
+                globals()[i].weight_conf -= globals()['general'].time_weight
+                globals()[i].weight -= globals()['general'].time_weight
                 logging.info("Gateway: {} is better than {}".format(globals()[i].name, globals()[j].name))
                 break
 
