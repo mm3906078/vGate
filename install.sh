@@ -3,7 +3,7 @@ apt update
 apt install -y python3-pip python3
 pip3 install pytz
 modprobe iptable_nat
-echo 1 > /proc/sys/net/ipv4/ip_forward
+echo net.ipv4.ip_forward=1 >> /etc/sysctl.conf
 touch /etc/systemd/system/vgate.service
 cat > /etc/systemd/system/vgate.service <<'EOF'
 [Unit]
@@ -20,3 +20,4 @@ WantedBy=multi-user.target
 EOF
 systemctl daemon-reload
 (crontab -l 2>/dev/null; echo "0 0 * * 0 /usr/bin/rm -rf /opt/vGate/Dgate.log") | crontab -
+sysctl -p
