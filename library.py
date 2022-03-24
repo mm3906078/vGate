@@ -5,17 +5,6 @@ import os
 import subprocess
 import speedtest
 
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        logging.FileHandler("Dgate.log"),
-        logging.StreamHandler()
-    ]
-)
-
-
 def create_dir():
     if not os.path.exists("scripts"):
         os.makedirs("scripts")
