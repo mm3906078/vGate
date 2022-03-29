@@ -14,3 +14,5 @@ sudo systemctl enable vgate
 sudo systemctl start vgate
 sudo systemctl status vgate
 ```
+Read more in [medium (English)](https://medium.com/@mr.salehi/use-multiple-isps-97cb4480b90a) and [virgool (Persian)](https://vrgl.ir/S6HLr)
+
