@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python3.7
 # file  -- main.py --
 import logging
 import signal
@@ -7,10 +7,12 @@ import sys
 import time as t
 from configparser import ConfigParser
 from datetime import *
-
+import threading
 import pytz
-
+import flask
 import library
+
+app = flask.Flask(__name__)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -38,6 +40,20 @@ class Gateway:
 
     def print_available(self):
         logging.info("Gateway: {} Available: {}".format(self.name, self.available))
+
+
+def runApp(host="0.0.0.0", port=5000, debug=False):
+    app.run(host=host,  port=port, debug=debug)
+
+
+@app.route('/sping', methods=['GET'])
+def home():
+    # logging.info("{}: Home page ".format(globals()[threadName]))
+    speed_test()
+    result = []
+    for i in section:
+        result.append(globals()[i].speed)
+    return f"True\n{result}"
 
 
 def load_config():
@@ -143,6 +159,7 @@ def check_gateway():
 
 
 def always_available():
+    logging.info("always_available is ruunning kkkkkkkkkkkk")
     while True:
         t.sleep(30)
         res_time_check = if_needed_change_weight_base_on_time()
@@ -171,7 +188,7 @@ def remove_gateway():
     library.remove_gateways(gateway_list)
 
 
-def speed_test(signal_number, frame, factor='ping'):
+def speed_test(factor='ping'):
     logging.info("Gateways are testing ... ")
     remove_gateway()
     for i in section:
@@ -194,8 +211,12 @@ def speed_test(signal_number, frame, factor='ping'):
 
 
 if __name__ == '__main__':
-    signal.signal(signal.SIGUSR1, speed_test)
     signal.signal(signal.SIGHUP, read_configuration)
     signal.signal(signal.SIGTERM, terminate_process)
     startapp()
-    always_available()
+    # api.app.run(host='0.0.0.0')
+    t1 = threading.Thread(runApp())
+    # always_available()
+    t2= threading.Thread(always_available())
+    t1.start()
+    t2.start()
