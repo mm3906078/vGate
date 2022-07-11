@@ -4,6 +4,7 @@ import logging
 import signal
 import subprocess
 import sys
+import os
 import time as t
 from configparser import ConfigParser
 from datetime import *
@@ -214,9 +215,8 @@ if __name__ == '__main__':
     signal.signal(signal.SIGHUP, read_configuration)
     signal.signal(signal.SIGTERM, terminate_process)
     startapp()
-    # api.app.run(host='0.0.0.0')
-    t1 = threading.Thread(runApp())
-    # always_available()
-    t2= threading.Thread(always_available())
-    t1.start()
-    t2.start()
+    n = os.fork()
+    if n > 0:
+        always_available()
+    else:
+        runApp()
