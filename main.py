@@ -24,7 +24,6 @@ logging.basicConfig(
     ]
 )
 
-
 class Gateway:
     speed = {}
 
@@ -42,20 +41,42 @@ class Gateway:
     def print_available(self):
         logging.info("Gateway: {} Available: {}".format(self.name, self.available))
 
-
 def runApp(host="0.0.0.0", port=5000, debug=False):
     app.run(host=host,  port=port, debug=debug)
 
-
 @app.route('/sping', methods=['GET'])
-def home():
+def sping():
     # logging.info("{}: Home page ".format(globals()[threadName]))
     speed_test()
     result = []
     for i in section:
-        result.append(globals()[i].speed)
+        result.append(globals()[i].speed['ping'])
     return f"True\n{result}"
 
+@app.route('/sdown', methods=['GET'])
+def sdown():
+    # logging.info("{}: Home page ".format(globals()[threadName]))
+    speed_test('download')
+    result = []
+    for i in section:
+        result.append(globals()[i].w)
+    return f"True\n{result}"
+
+@app.route('/weight', methods=['GET'])
+def weight():
+    result = {}
+    for i in section:
+        result.update({globals()[i].name:globals()[i].weight})
+    return result
+
+@app.route('/reloadweight', methods=['GET'])
+def reloadweight():
+    try:
+        reload_weight()
+        return "True"
+    except Exception as e:
+        logging.error(e)
+        return "False"
 
 def load_config():
     logging.info("Dgate started")
@@ -65,8 +86,10 @@ def load_config():
     config.read('config.cfg')
     global section
     global time_weight
+    global speed_weight
     section = config.sections()
     time_weight = config['general']['time_weight']
+    speed_weight = config['general']['speed_weight']
     section.remove("general")
     for gw in section:
         if gw != "general":
@@ -77,11 +100,15 @@ def load_config():
     logging.info("timezone: {}".format(tz))
     logging.info("config loaded")
 
-
 def startapp():
     load_config()
     switch_gateway()
 
+def reload_weight():
+    logging.info('reload weight')
+    for i in section:
+        globals()[i].weight = globals()[i].weight_conf
+    return
 
 def available_status():
     remove_gateway()
@@ -100,6 +127,7 @@ def available_status():
 
 def if_needed_change_weight_base_on_time():
     now = datetime.now(tz).time()
+    reload_weight()
     for i in section:
         if library.in_between(now, time(int(globals()[i].start_time)), time(int(globals()[i].end_time))):
             if globals()[i].weight == globals()[i].weight_conf:
@@ -119,6 +147,10 @@ def chose_gateway():
     if_needed_change_weight_base_on_time()
     section.sort(key=lambda x: globals()[x].weight)
     available_status()
+    result = {}
+    for i in section:
+        result.update({globals()[i].name:globals()[i].weight})
+    logging.info(result)
     for i in section:
         if globals()[i].available:
             logging.info("Gateway: {} is available".format(globals()[i].name))
@@ -160,7 +192,6 @@ def check_gateway():
 
 
 def always_available():
-    logging.info("always_available is ruunning kkkkkkkkkkkk")
     while True:
         t.sleep(30)
         res_time_check = if_needed_change_weight_base_on_time()
@@ -191,6 +222,7 @@ def remove_gateway():
 
 def speed_test(factor='ping'):
     logging.info("Gateways are testing ... ")
+    reload_weight()
     remove_gateway()
     for i in section:
         library.add_gateway(globals()[i].ip, globals()[i].name)
@@ -205,8 +237,7 @@ def speed_test(factor='ping'):
     for i in section:
         for j in section:
             if globals()[i].speed.get(factor) < globals()[j].speed.get(factor):
-                globals()[i].weight_conf -= int(time_weight)
-                globals()[i].weight -= int(time_weight)
+                globals()[i].weight -= speed_weight
                 logging.info("Gateway: {} is better than {}".format(globals()[i].name, globals()[j].name))
                 break
 
