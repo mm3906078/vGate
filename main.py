@@ -199,8 +199,8 @@ def always_available():
 
 def terminate_process(signal_number, frame):
     logging.info('(SIGTERM) terminating the process')
-    remove_gateway()
-    sys.exit()
+    switch_gateway()
+    sys.exit(0)
 
 
 def read_configuration(signal_number, frame):
