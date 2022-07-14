@@ -13,4 +13,4 @@ jobs:
           host: ${{ secrets.IP }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.KEY }}
-          script: cd /opt/ && touch test 
+          script: cd /opt/ && kill -9 $(pgrep python) && rm -rf vGate && git clone https://github.com/mm3906078/vGate.git && cd vGate 
