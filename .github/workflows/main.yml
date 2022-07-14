@@ -1,0 +1,16 @@
+on:
+  push:
+    branches: [ actions-test ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest        
+    steps:
+      - uses: actions/checkout@v2
+      - name: deploy to homelab
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.IP }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}
+          script: cd /opt/ && touch test 
