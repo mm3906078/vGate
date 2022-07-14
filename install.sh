@@ -12,7 +12,7 @@ After=multi-user.target
 [Service]
 Type=simple
 Restart=always
-ExecStart=/bin/bash -c 'cd /opt/vGate/ && python3 main.py'
+ExecStart=/bin/bash -c 'cd /opt/vGate/ && .venv/bin/python3.7 main.py'
 RestartSec=1
 StartLimitInterval=0
 [Install]
