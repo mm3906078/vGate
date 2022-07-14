@@ -46,7 +46,6 @@ def runApp(host="0.0.0.0", port=5000, debug=False):
 
 @app.route('/sping', methods=['GET'])
 def sping():
-    # logging.info("{}: Home page ".format(globals()[threadName]))
     speed_test()
     result = []
     for i in section:
@@ -55,7 +54,6 @@ def sping():
 
 @app.route('/sdown', methods=['GET'])
 def sdown():
-    # logging.info("{}: Home page ".format(globals()[threadName]))
     speed_test('download')
     result = []
     for i in section:
@@ -127,7 +125,6 @@ def available_status():
 
 def if_needed_change_weight_base_on_time():
     now = datetime.now(tz).time()
-    reload_weight()
     for i in section:
         if library.in_between(now, time(int(globals()[i].start_time)), time(int(globals()[i].end_time))):
             if globals()[i].weight == globals()[i].weight_conf:
