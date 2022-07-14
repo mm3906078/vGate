@@ -1,0 +1,16 @@
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  Deploy:
+    runs-on: self-hosted       
+    steps:
+      - uses: actions/checkout@v2
+      - name: deploy to homelab
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.IP }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}
+          script: cd /opt/ && systemctl stop vgate && rm -rf vGate && git clone https://github.com/mm3906078/vGate.git && cd vGate && python3.7 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt && deactivate && systemctl restart vgate
